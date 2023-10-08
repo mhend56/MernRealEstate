@@ -1,8 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@layer components {
-    .align-element {
-        @apply mx-auto max-w-7xl px-8;
-    }
+body {
+    background-color: rgb(241, 245, 241);
 }
