@@ -1,8 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ListingItem from '../components/ListingItem';
-
 
 const Search = () => {
   const navigate = useNavigate();
@@ -15,9 +13,10 @@ const Search = () => {
     sort: 'created_at',
     order: 'desc',
   });
-const [loading,setLoading]=useState(false)
-const [listings,setListings]=useState([])
-console.log(listings)
+  const [loading, setLoading] = useState(false);
+  const [listings, setListings] = useState([]);
+  const [showMore, setShowMore] = useState(false);
+  // console.log(listings)
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -49,18 +48,21 @@ console.log(listings)
       });
     }
 
-    const fetchListings = async()=>{
-        setLoading(true);
-        const searchQuery = urlParams.toString()
-        const res = await fetch(`/api/listing/get?${searchQuery}`)
-        const data= await res.json();
-      
-        setListings(data)
-        setLoading(false)
-
-
-    }
-    fetchListings()
+    const fetchListings = async () => {
+      setLoading(true);
+      setShowMore(false)
+      const searchQuery = urlParams.toString();
+      const res = await fetch(`/api/listing/get?${searchQuery}`);
+      const data = await res.json();
+      if (data.length > 8) {
+        setShowMore(true);
+      }else{
+        setShowMore(false)
+      }
+      setListings(data);
+      setLoading(false);
+    };
+    fetchListings();
   }, [location.search]);
 
   const handleChange = (e) => {
@@ -106,6 +108,19 @@ console.log(listings)
     const searchQuery = urlParams.toString();
     navigate(`/search?${searchQuery}`);
   };
+
+  const onShowMoreClick=async()=>{
+    const numberOfListings =listings.length
+    const startIndex=numberOfListings
+    const urlParams = new URLSearchParams(location.search)
+    urlParams.set('startIndex',startIndex)
+    const searchQuery = urlParams.toString()
+    const res =await fetch(`/api/listing/get?${searchQuery}`)
+    const data = await res.json()
+    if (data.length<9){setShowMore(false)}
+setListings([...listings, ...data])
+
+  }
   return (
     <div className="flex flex-col md:flex-row">
       <div className="p-7 border-b-2 md:border-r-2 md:min-h-screen">
@@ -213,14 +228,28 @@ console.log(listings)
           Listing results:
         </h1>
         <div className="p-7 flex flex-wrap gap-4">
-            {!loading && listings.length === 0 &&(
-                <p className="text-xl text-slate-700">No listing found</p>
-            )}
-            {loading && (
-                <p className="text-xl text-slate-700 text-center w-full">Loading...</p>
-            )}
+          {!loading && listings.length === 0 && (
+            <p className="text-xl text-slate-700">No listing found</p>
+          )}
+          {loading && (
+            <p className="text-xl text-slate-700 text-center w-full">
+              Loading...
+            </p>
+          )}
 
-            {!loading && listings && listings.map((listing)=><ListingItem key ={listing._id} listing = {listing}/>)}
+          {!loading &&
+            listings &&
+            listings.map((listing) => (
+              <ListingItem key={listing._id} listing={listing} />
+            ))}
+          {showMore && (
+            <button
+              onClick={onShowMoreClick}
+              className="text-green-700 hover:underline text-lg font-semibold p-7 text-center w-full"
+            >
+              Show more
+            </button>
+          )}
         </div>
       </div>
     </div>
